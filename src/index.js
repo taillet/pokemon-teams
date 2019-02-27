@@ -1,6 +1,7 @@
 //solution goes here
 
 document.addEventListener('DOMContentLoaded', fetchTrainers)
+let allTrainers = []
 
 // getters
 function getMain() {
@@ -20,6 +21,13 @@ function fetchTrainers() {
 
 // render trainers
 function renderTrainer(trainer) {
+
+  //add trainers to trainers array if not already included
+  if (!allTrainers.includes(trainer.id )) {
+    allTrainers.push(trainer.id)
+  }
+
+  // render
   let div = document.createElement('div')
   div.id = trainer.id
   div.className ="card"
@@ -31,7 +39,7 @@ function renderTrainer(trainer) {
   let button = document.createElement('button')
   button.innerText = 'Add Pokemon'
   button.dataset.id = trainer.id
-  button.addEventListener('click', fetchNewPokemon)
+  button.addEventListener('click', (e)=>{fetchNewPokemon(e); disableButtonsAfterSix(e)})
   div.appendChild(button)
 
   let ul = document.createElement('ul')
@@ -59,38 +67,48 @@ function addPokemon(pokemon, trainerId) {
     return li
   }
 
-// back-end add
-function fetchNewPokemon(e) {
-  let trainerId = e.target.dataset.id
-  let data = {trainer_id: trainerId}
-  fetch(`http://localhost:3000/pokemons`, {method: "POST",
-  headers: {'Content-Type': 'application/json'},
-  body: JSON.stringify(data)})
-  .then(res=>res.json())
-  .then(pokemon=>{
-    let li = addPokemon(pokemon, trainerId)
-    addPokemonToTrainer(li, trainerId)
-  })
-}
+  // back-end add
+  function fetchNewPokemon(e) {
+    let trainerId = e.target.dataset.id
+    let data = {trainer_id: trainerId}
+    fetch(`http://localhost:3000/pokemons`, {method: "POST",
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)})
+    .then(res=>res.json())
+    .then(pokemon=>{
+      let li = addPokemon(pokemon, trainerId)
+      addPokemonToTrainer(li, trainerId)
+    })
+  }
 
-// front-end add
-function addPokemonToTrainer(li, trainerId) {
-  getUl(trainerId).appendChild(li)
-}
+  // front-end add
+  function addPokemonToTrainer(li, trainerId) {
+    getUl(trainerId).appendChild(li)
+  }
 
-// back-end delete
-function fetchDeletePokemon(e) {
-  let pokemonId = e.target.dataset.pokemonId
-  fetch(`http://localhost:3000/pokemons/${pokemonId}`, {method: "DELETE"})
-}
+  // back-end delete
+  function fetchDeletePokemon(e) {
+    let pokemonId = e.target.dataset.pokemonId
+    fetch(`http://localhost:3000/pokemons/${pokemonId}`, {method: "DELETE"})
+  }
 
-// front-end delete
-function releasePokemon(e) {
-  let pokemonId = e.target.dataset.pokemonId
-  let trainerId = e.target.dataset.trainerId
-  for (let li of getUl(trainerId).children) {
-    if (li.dataset.id === pokemonId) {
-      li.remove()
+  // front-end delete
+  function releasePokemon(e) {
+    let pokemonId = e.target.dataset.pokemonId
+    let trainerId = e.target.dataset.trainerId
+    for (let li of getUl(trainerId).children) {
+      if (li.dataset.id === pokemonId) {
+        li.remove()
+      }
     }
   }
-}
+
+  function disableButtonsAfterSix(e) {
+    let trainerId = e.target.dataset.id
+    if (getUl(trainerId)) {
+      if (getUl(trainerId).childElementCount >= 4)
+      {document.querySelector(`button[data-id="${trainerId}"]`).disabled = true;}
+      else if (getUl(trainerId).childElementCount <= 5)
+      {document.querySelector(`button[data-id="${trainerId}"]`).disabled = false;}
+    }
+  }
